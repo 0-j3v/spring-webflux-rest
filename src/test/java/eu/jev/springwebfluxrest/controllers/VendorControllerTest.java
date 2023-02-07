@@ -5,11 +5,13 @@ import eu.jev.springwebfluxrest.repositories.VendorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.reactivestreams.Publisher;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -40,7 +42,8 @@ class VendorControllerTest {
                         .lastname("Vendor 2 Lastname")
                         .build()
         ));
-        webTestClient.get().uri("/api/v1/vendors")
+        webTestClient.get()
+                .uri("/api/v1/vendors")
                 .exchange()
                 .expectBodyList(Vendor.class)
                 .hasSize(2);
@@ -54,8 +57,25 @@ class VendorControllerTest {
                         .lastname("Vendor Lastname")
                         .build()
         ));
-        webTestClient.get().uri("/api/v1/vendors/1")
+        webTestClient.get()
+                .uri("/api/v1/vendors/1")
                 .exchange()
                 .expectBody(Vendor.class);
+    }
+
+    @Test
+    void createVendor() {
+        when(vendorRepository.saveAll(any(Publisher.class))).thenReturn(Flux.just(
+                Vendor.builder().firstname("Some Firstname").lastname("Some Lastname").build()
+        ));
+
+        Mono<Vendor> vendorToSave = Mono.just(Vendor.builder().firstname("Some Firstname").lastname("Some Lastname").build());
+
+        webTestClient.post()
+                .uri("/api/v1/vendors")
+                .body(vendorToSave, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isCreated();
     }
 }
