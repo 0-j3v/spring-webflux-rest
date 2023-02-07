@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class VendorControllerTest {
 
@@ -93,5 +93,39 @@ class VendorControllerTest {
                 .exchange()
                 .expectStatus()
                 .isOk();
+    }
+
+    @Test
+    void patchVendorWithChanges() {
+        when(vendorRepository.findById(anyString())).thenReturn(Mono.just(Vendor.builder().firstname("Old Firstname").build()));
+        when(vendorRepository.save(any(Vendor.class))).thenReturn(Mono.just(Vendor.builder().build()));
+
+        Mono<Vendor> vendorToPatch = Mono.just(Vendor.builder().firstname("New Firstname").build());
+
+        webTestClient.patch()
+                .uri("/api/v1/vendors/1")
+                .body(vendorToPatch, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(vendorRepository, times(1)).save(any());
+    }
+
+    @Test
+    void patchVendorWithoutChanges() {
+        when(vendorRepository.findById(anyString())).thenReturn(Mono.just(Vendor.builder().firstname("Old Firstname").build()));
+        when(vendorRepository.save(any(Vendor.class))).thenReturn(Mono.just(Vendor.builder().build()));
+
+        Mono<Vendor> vendorToPatch = Mono.just(Vendor.builder().firstname("Old Firstname").build());
+
+        webTestClient.patch()
+                .uri("/api/v1/vendors/1")
+                .body(vendorToPatch, Vendor.class)
+                .exchange()
+                .expectStatus()
+                .isOk();
+
+        verify(vendorRepository, never()).save(any());
     }
 }

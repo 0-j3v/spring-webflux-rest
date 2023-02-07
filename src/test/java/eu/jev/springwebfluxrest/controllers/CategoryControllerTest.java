@@ -114,7 +114,7 @@ class CategoryControllerTest {
     }
 
     @Test
-    void patchCategoryWithNoChanges() {
+    void patchCategoryWithoutChanges() {
         when(categoryRepository.findById(anyString())).thenReturn(Mono.just(Category.builder().build()));
         when(categoryRepository.save(any(Category.class))).thenReturn(Mono.just(Category.builder().build()));
 
